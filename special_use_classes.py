@@ -1,0 +1,72 @@
+# this file i made to make and use my own classes which i will make to help me
+# save time and effort
+
+import pandas as pd
+import numpy as np
+
+
+class OutlierHandling:
+
+    exception_list = []
+
+    def __init__(self):
+        pass
+
+    # this funciton will work on getting the iqr, lower/upper bounds from a column
+    def fit_IQR(self, column: pd.Series):
+        c = column.copy()
+
+        try:
+            q1 = c.quantile(1 / 4)
+            q3 = c.quantile(3 / 4)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            uppoer_bound = q3 + 1.5 * iqr
+            return iqr, lower_bound, uppoer_bound
+        except Exception as e:
+            self.exception_list.append("fit_iqr exception as :", e)
+            return None
+
+    # this function for applying the transformation
+    def fit_transform_IQR(self, column: pd.Series):
+        c = column.copy()
+        iqr, lower, upper = self.fit_IQR(c)
+        c = c[(c > lower) & (c < upper)]
+        return c
+    # this function for displaying
+    def display_outliers(self, column: pd.Series):
+        counter = 0
+        higher_outliers = []
+        lower_outliers = []
+        c = column.copy()
+        iqr, lower, upper = self.fit_IQR(c)
+        for i in c:
+            if i > upper:
+                higher_outliers.append(i)
+                print(f"{counter} : {i}")
+            elif i < lower:
+                lower_outliers.append(i)
+                print(f"{counter} : {i}")
+            counter += 1
+        return higher_outliers, lower_outliers
+    
+    # this function to return without print
+    def return_outliers(self, column: pd.Series):
+        counter = 0
+        higher_outliers = []
+        lower_outliers = []
+        c = column.copy()
+        iqr, lower, upper = self.fit_IQR(c)
+        for i in c:
+            if i > upper:
+                higher_outliers.append(i)
+            elif i < lower:
+                lower_outliers.append(i)
+            counter += 1
+        return higher_outliers, lower_outliers
+    
+    # this function to return count
+    def count_outliers(self, column: pd.Series):
+        higher, lower = self.return_outliers
+        number_of_outliers = len(higher) + len(lower)
+        return number_of_outliers
