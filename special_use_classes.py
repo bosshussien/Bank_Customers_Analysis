@@ -3,6 +3,8 @@
 
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 class OutlierHandling:
@@ -21,35 +23,34 @@ class OutlierHandling:
             q3 = c.quantile(3 / 4)
             iqr = q3 - q1
             lower_bound = q1 - 1.5 * iqr
-            uppoer_bound = q3 + 1.5 * iqr
-            return iqr, lower_bound, uppoer_bound
+            upper_bound = q3 + 1.5 * iqr
+            return iqr, lower_bound, upper_bound
         except Exception as e:
             self.exception_list.append("fit_iqr exception as :", e)
             return None
 
     # this function for applying the transformation
-    def fit_transform_IQR(self, column: pd.Series):
+    def remove_outliers(self, column: pd.Series):
         c = column.copy()
         iqr, lower, upper = self.fit_IQR(c)
         c = c[(c > lower) & (c < upper)]
         return c
+
     # this function for displaying
     def display_outliers(self, column: pd.Series):
-        counter = 0
         higher_outliers = []
         lower_outliers = []
         c = column.copy()
         iqr, lower, upper = self.fit_IQR(c)
-        for i in c:
+        for counter, i in c.items():
             if i > upper:
                 higher_outliers.append(i)
                 print(f"{counter} : {i}")
             elif i < lower:
                 lower_outliers.append(i)
                 print(f"{counter} : {i}")
-            counter += 1
         return higher_outliers, lower_outliers
-    
+
     # this function to return without print
     def return_outliers(self, column: pd.Series):
         counter = 0
@@ -64,9 +65,29 @@ class OutlierHandling:
                 lower_outliers.append(i)
             counter += 1
         return higher_outliers, lower_outliers
-    
+
     # this function to return count
     def count_outliers(self, column: pd.Series):
-        higher, lower = self.return_outliers
+        higher, lower = self.return_outliers()
         number_of_outliers = len(higher) + len(lower)
         return number_of_outliers
+
+    # this function to plot outliers
+    def plot(self, dataframe: pd.DataFrame, h=10, w=6):
+
+        length_list_hs = []
+        length_list_ls = []
+        names = []
+
+        for i in dataframe.select_dtypes("number").columns:
+            higher, lower = self.return_outliers(dataframe[i])
+            length_list_hs.append(len(higher))
+            length_list_ls.append(len(lower))
+            names.append(i)
+        # plotting
+
+        plt.figure(figure=(h,w))
+        plt.barh(names, length_list_hs, label="Higher Outliers")
+        plt.barh(names, length_list_ls, label="Lower Outliers")
+        plt.legend()
+        plt.show()
