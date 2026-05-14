@@ -29,6 +29,10 @@ class OutlierHandling:
             self.exception_list.append("fit_iqr exception as :", e)
             return None
 
+    # def fit_IQR_df(self, df: pd.DataFrame):
+    #     df2 = df.copy()
+    #     for i in df.select_dtypes('number'):
+
     # this function for applying the transformation
     def remove_outliers(self, column: pd.Series):
         c = column.copy()
@@ -49,6 +53,24 @@ class OutlierHandling:
             elif i < lower:
                 lower_outliers.append(i)
                 print(f"{counter} : {i}")
+        return higher_outliers, lower_outliers
+
+    def display_outliers_df(self, df: pd.DataFrame):
+        higher_outliers = []
+        lower_outliers = []
+        # iqr, lower, upper = self.fit_IQR(c)
+        for i in df.select_dtypes("number").columns:
+
+            iqr, lower, upper = self.fit_IQR(df[i])
+            print(f"{i} : ")
+            for counter, j in df[i].items():
+                if j > upper:
+                    higher_outliers.append(j)
+                    print(f"{counter} : {j}")
+                elif j < lower:
+                    lower_outliers.append(j)
+                    print(f"{counter} : {j}")
+            print("_________")
         return higher_outliers, lower_outliers
 
     # this function to return without print
@@ -72,6 +94,16 @@ class OutlierHandling:
         number_of_outliers = len(higher) + len(lower)
         return number_of_outliers
 
+    # for dataframe
+    def count_outliers_df(self, df: pd.DataFrame):
+        for i in df.select_dtypes("number").columns:
+
+            higher, lower = self.return_outliers(df[i])
+            total = len(higher) + len(lower)
+            if total != 0:
+                print(f"{i}: {len(higher)}, {i}: {len(lower)}, Total: {total}")
+                print("________________\n")
+
     # this function to plot outliers
     def plot(self, dataframe: pd.DataFrame, h=10, w=6):
 
@@ -86,7 +118,7 @@ class OutlierHandling:
             names.append(i)
         # plotting
 
-        plt.figure(figure=(h,w))
+        plt.figure(figure=(h, w))
         plt.barh(names, length_list_hs, label="Higher Outliers")
         plt.barh(names, length_list_ls, label="Lower Outliers")
         plt.legend()
